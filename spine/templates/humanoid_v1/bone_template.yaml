@@ -61,3 +61,83 @@ slots:
     bone: leg_r
     default_attachment: leg_r
     required: true
+step2_normalization:
+  required_canonical_parts:
+    - head
+    - body
+    - arm_l
+    - arm_r
+    - leg_l
+    - leg_r
+  canonical_parts:
+    head:
+      category: head
+      side: null
+      anchor_hint: head
+      z_order_hint: 60
+      symmetry_group: upper
+    body:
+      category: body
+      side: null
+      anchor_hint: torso
+      z_order_hint: 40
+      symmetry_group: core
+    arm_l:
+      category: arm
+      side: L
+      anchor_hint: shoulder_l
+      z_order_hint: 50
+      symmetry_group: arms
+    arm_r:
+      category: arm
+      side: R
+      anchor_hint: shoulder_r
+      z_order_hint: 20
+      symmetry_group: arms
+    leg_l:
+      category: leg
+      side: L
+      anchor_hint: hip_l
+      z_order_hint: 10
+      symmetry_group: legs
+    leg_r:
+      category: leg
+      side: R
+      anchor_hint: hip_r
+      z_order_hint: 5
+      symmetry_group: legs
+  category_tokens:
+    head:
+      strong: [head]
+      fallback: []
+    body:
+      strong: [body]
+      fallback: [torso]
+    arm:
+      strong: [arm]
+      fallback: []
+    leg:
+      strong: [leg]
+      fallback: [thigh, shin, foot]
+  side_tokens:
+    L:
+      strong: [l, left]
+      fallback: [front]
+    R:
+      strong: [r, right]
+      fallback: [rear, back]
+  variant_tokens:
+    upper:
+      strong: [upper]
+      fallback: []
+    lower:
+      strong: [lower]
+      fallback: [shin]
+    foot:
+      strong: [foot]
+      fallback: []
+  pivot_defaults:
+    head: [0.5, 0.15]
+    body: [0.5, 0.5]
+    arm: [0.5, 0.2]
+    leg: [0.5, 0.1]

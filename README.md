@@ -322,3 +322,129 @@ pytest -q
 - 현재 완료 범위는 `단일 템플릿(humanoid_v1)`과 `샘플 3세트` 기준의 로컬 검증
 - 아직 포함되지 않은 범위는 `원화 자동 분리`, `텍스트 기반 생성`, `다중 템플릿 일반화`, `정량 layout metric`
 - 현재 산출물은 사람이 Spine에서 후처리할 수 있는 리깅 초안이며, 완전 자동 리깅 결과물을 의미하지 않는다
+
+## STEP 2 구현 상태
+
+현재 저장소에는 STEP 2 기준의 deterministic pre-rig normalization layer가 추가되어 있다.
+
+- 엔트리포인트: [pipeline/step2.py](D:\Spine\pipeline\step2.py)
+- 스캐너: [asset_scanner.py](D:\Spine\pipeline\asset_scanner.py)
+- 정규화기: [normalizer.py](D:\Spine\pipeline\normalizer.py)
+- 검수 리포트: [review.py](D:\Spine\pipeline\review.py)
+- 계약 정의: [step2_contracts.py](D:\Spine\pipeline\step2_contracts.py)
+- 템플릿 규칙: [bone_template.yaml](D:\Spine\spine\templates\humanoid_v1\bone_template.yaml)
+- 샘플 입력: [normal_case](D:\Spine\samples\step2\normal_case), [fallback_case](D:\Spine\samples\step2\fallback_case), [ambiguous_case](D:\Spine\samples\step2\ambiguous_case)
+
+핵심 동작:
+
+- 입력 디렉토리의 PNG 자산 재귀 스캔
+- 파일명/경로 tokenization 및 structured trace 기록
+- category / side / variant token scoring 기반 추론
+- deterministic duplicate arbitration
+- `normalized_manifest.json`, `step1_parts_manifest.json`, `review_report.json` 생성
+- `normalized_assets/selected`, `normalized_assets/rejected` 분리 복사
+- 상태에 따라 STEP 1 호출 또는 차단
+
+### STEP 2 출력 구조
+
+```text
+step2_output/
+  normalized_manifest.json
+  step1_parts_manifest.json
+  review_report.json
+  normalized_assets/
+    selected/
+    rejected/
+```
+
+`normalized_manifest.json`에는 scanner 결과와 normalization 결과가 같이 담긴다.
+
+각 part 항목 최소 필드:
+
+- `source_path`
+- `normalized_name`
+- `category`
+- `side`
+- `variant`
+- `anchor_hint`
+- `bbox`
+- `pivot_hint`
+- `confidence`
+- `selected`
+- `trace`
+
+`review_report.json`에는 아래 항목이 포함된다.
+
+- `status`
+- `summary`
+- `issues`
+- `low_confidence_parts`
+- `unresolved_parts`
+- `duplicate_groups`
+- `missing_required_parts`
+- `notes`
+- `step1_status`
+- `step1_error`
+
+### STEP 2 실행 예시
+
+STEP 2만 실행:
+
+```powershell
+python -m pipeline.step2 `
+  --input-dir "D:\Spine\samples\step2\fallback_case" `
+  --template-id "humanoid_v1" `
+  --output-dir "D:\Spine\artifacts\step2\fallback_case" `
+  --force
+```
+
+STEP 2 후 STEP 1까지 연결:
+
+```powershell
+python -m pipeline.step2 `
+  --input-dir "D:\Spine\samples\step2\normal_case" `
+  --template-id "humanoid_v1" `
+  --output-dir "D:\Spine\artifacts\step2\normal_case" `
+  --run-step1 `
+  --force
+```
+
+### STEP 2 상태 규칙
+
+- `PASS`: required canonical part 충족, duplicate 없음, unresolved 없음, low confidence 없음
+- `REVIEW_REQUIRED`: selected set은 만들 수 있지만 검수 경고가 남아 있음
+- `FAIL`: required canonical set을 만들 수 없음
+
+STEP 1 호출 규칙:
+
+- `FAIL`이면 STEP 1 호출 금지
+- `REVIEW_REQUIRED`이면 `--force-step1`일 때만 STEP 1 실행
+- `PASS`이면 `--run-step1`일 때 STEP 1 실행
+
+STEP 1 실행 요청 후 결과 해석 규칙:
+
+- `--run-step1` 또는 `--force-step1`가 지정되면 STEP 1은 `requested` 상태로 간주한다
+- `requested` 상태에서는 `step1_status=PASS`만 성공이다
+- `requested` 상태에서 `step1_status=SKIPPED`, `FAIL`, `ERROR`는 모두 STEP 2 CLI 실패로 간주한다
+- `NOT_REQUESTED`는 STEP 1 실행이 요청되지 않은 경우에만 중립 상태다
+
+### STEP 2 검증 결과
+
+- `pytest -q`: `10 passed`
+- `normal_case`: `PASS`, `step1_status=PASS`
+- `fallback_case`: `REVIEW_REQUIRED`, `step1_status=SKIPPED`
+- `ambiguous_case`: `FAIL`
+
+현재 범위에서 확인된 사실:
+
+- STEP 2는 입력 자산 편차를 deterministic rule-based 방식으로 정규화한다
+- STEP 2 결과는 현재 STEP 1 입력 계약으로 바로 연결된다
+- duplicate, unresolved, low-confidence, missing-required-part가 review report에 구조적으로 기록된다
+
+아직 포함되지 않은 범위:
+
+- 딥러닝 기반 자동 분할
+- 텍스트 기반 이미지 생성
+- Spine Editor bone/keyframe/timeline 직접 편집
+- 다중 템플릿 일반화
+- 정량 layout metric 자동 판정
