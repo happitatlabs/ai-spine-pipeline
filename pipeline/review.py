@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 from pipeline.normalizer import STRONG_TOKEN_CONFIDENCE
+from pipeline.status import StepReviewStatus
 from pipeline.step2_contracts import NormalizedAsset, ReviewIssue, ReviewReport, Step2Rules
 
 
@@ -84,11 +85,11 @@ def build_review_report(normalized_assets: list[NormalizedAsset], rules: Step2Ru
         notes.append(message)
 
     if missing_required_parts:
-        status = "FAIL"
+        status = StepReviewStatus.FAIL
     elif issues:
-        status = "REVIEW_REQUIRED"
+        status = StepReviewStatus.REVIEW_REQUIRED
     else:
-        status = "PASS"
+        status = StepReviewStatus.PASS
 
     return ReviewReport(
         status=status,

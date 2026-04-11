@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pipeline.status import StepStatus
 from pipeline.step1 import (
     build_bundle,
     load_json,
@@ -105,7 +106,7 @@ def test_run_step1_writes_pass_report(tmp_path, monkeypatch) -> None:
     )
 
     report = load_json(result["review_report"])
-    assert result["status"] == "PASS"
-    assert report["status"] == "PASS"
+    assert result["status"] == StepStatus.PASS
+    assert report["status"] == StepStatus.PASS
     assert "primary" in report["roundtrip"]
     assert "secondary" in report["roundtrip"]

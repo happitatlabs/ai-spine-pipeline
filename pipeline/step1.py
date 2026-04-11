@@ -13,6 +13,8 @@ from typing import Any
 
 import yaml
 
+from pipeline.status import StepStatus, render_status
+
 
 DEFAULT_SPINE_PATH = r"C:\Program Files\Spine\Spine.com"
 UNRESOLVED_RATIO_LIMIT = 0.10
@@ -541,7 +543,7 @@ class SpineCliAdapter:
 
 @dataclass
 class ReviewReport:
-    status: str
+    status: StepStatus
     failure_type: str | None
     template_id: str
     parts_count: int
@@ -579,7 +581,7 @@ def validate_step1(
         if unresolved_ratio > UNRESOLVED_RATIO_LIMIT:
             notes.append(f"unresolved ratio {unresolved_ratio:.2%} exceeds 10%")
         report = ReviewReport(
-            status="FAIL",
+            status=StepStatus.FAIL,
             failure_type="MAPPING_FAILURE",
             template_id=template.template_id,
             parts_count=len(manifest.parts),
@@ -601,7 +603,7 @@ def validate_step1(
         notes.append("visual layout review still required in STEP 1")
 
     report = ReviewReport(
-        status="PASS",
+        status=StepStatus.PASS,
         failure_type=None,
         template_id=template.template_id,
         parts_count=len(manifest.parts),
@@ -617,12 +619,12 @@ def validate_step1(
         primary = cli.export_skeleton_data(input_path=bundle.draft_skeleton_path, output_path=primary_dir, export_mode="json+pack")
         report.roundtrip["primary"] = _roundtrip_payload(primary, primary_dir)
         if not primary.ok or not _has_required_export_files(primary_dir):
-            report.status = "FAIL"
+            report.status = StepStatus.FAIL
             report.failure_type = "EXPORT_FAILURE"
             if _has_required_export_files(primary_dir) is False:
                 report.notes.append("primary roundtrip did not produce .json, .atlas, and .png outputs")
 
-        if report.status == "PASS" and run_secondary_roundtrip:
+        if report.status == StepStatus.PASS and run_secondary_roundtrip:
             project_path = Path(secondary_project_path or (roundtrip_root / "generated.spine"))
             imported = cli.import_skeleton_data(
                 input_path=bundle.draft_skeleton_path,
@@ -631,7 +633,7 @@ def validate_step1(
             )
             secondary_payload = {"import": _cli_payload(imported)}
             if not imported.ok:
-                report.status = "FAIL"
+                report.status = StepStatus.FAIL
                 report.failure_type = "IMPORT_FAILURE"
                 report.roundtrip["secondary"] = secondary_payload
             else:
@@ -646,7 +648,7 @@ def validate_step1(
                 secondary_payload["export"] = _roundtrip_payload(exported, secondary_export_dir)
                 report.roundtrip["secondary"] = secondary_payload
                 if not exported.ok or not _has_required_export_files(secondary_export_dir):
-                    report.status = "FAIL"
+                    report.status = StepStatus.FAIL
                     report.failure_type = "EXPORT_FAILURE"
 
     write_json(bundle.review_report_path, report.to_dict())
@@ -755,7 +757,7 @@ def main() -> int:
         skip_roundtrip=args.skip_roundtrip,
     )
 
-    print(f"status={result['status']}")
+    print(f"status={render_status(result['status'])}")
     print(f"bundle_dir={result['bundle_dir']}")
     print(f"review_report={result['review_report']}")
     print(f"mapping_confidence_avg={result['mapping_confidence_avg']}")
@@ -765,7 +767,7 @@ def main() -> int:
         print(f"unresolved_parts={','.join(result['unresolved_parts'])}")
     if result["missing_required_slots"]:
         print(f"missing_required_slots={','.join(result['missing_required_slots'])}")
-    return 0 if result["status"] == "PASS" else 1
+    return 0 if result["status"] == StepStatus.PASS else 1
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ from pathlib import Path
 from pipeline.asset_scanner import scan_assets
 from pipeline.normalizer import load_step2_rules, normalize_assets
 from pipeline.review import build_review_report
+from pipeline.status import StepReviewStatus
 
 
 SAMPLES_ROOT = Path("D:/Spine/samples/step2")
@@ -45,7 +46,7 @@ def test_normalize_assets_is_deterministic_for_duplicates_and_review_status() ->
     assert duplicate_body.reject_reason == "duplicate:body"
 
     report = build_review_report(normalized, rules)
-    assert report.status == "FAIL"
+    assert report.status == StepReviewStatus.FAIL
     assert "body" in report.duplicate_groups
     assert "arm_l" in report.missing_required_parts
     assert "arm_r" in report.missing_required_parts

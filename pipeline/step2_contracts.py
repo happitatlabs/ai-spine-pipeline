@@ -4,6 +4,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from pipeline.status import StepReviewStatus, StepRunState, StepStatus
+
 
 @dataclass(frozen=True)
 class TraceEntry:
@@ -133,7 +135,7 @@ class ReviewIssue:
 
 @dataclass
 class ReviewReport:
-    status: str
+    status: StepReviewStatus
     template_id: str
     summary: dict[str, Any]
     issues: list[ReviewIssue]
@@ -142,7 +144,7 @@ class ReviewReport:
     duplicate_groups: dict[str, list[str]]
     missing_required_parts: list[str]
     notes: list[str]
-    step1_status: str = "NOT_RUN"
+    step1_status: StepStatus | StepRunState = StepRunState.NOT_REQUESTED
     step1_error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:

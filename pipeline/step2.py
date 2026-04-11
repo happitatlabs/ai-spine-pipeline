@@ -10,6 +10,13 @@ from typing import Any
 from pipeline.asset_scanner import scan_assets
 from pipeline.normalizer import build_step1_manifest, load_step2_rules, normalize_assets
 from pipeline.review import build_review_report
+from pipeline.status import (
+    StepReviewStatus,
+    StepRunState,
+    StepStatus,
+    coerce_step_status,
+    render_status,
+)
 from pipeline.step1 import run_step1, write_json
 from pipeline.step2_contracts import NormalizedAsset, ReviewReport
 
@@ -89,11 +96,11 @@ def run_step2(
                 spine_path=spine_path or r"C:\Program Files\Spine\Spine.com",
                 skip_roundtrip=step1_skip_roundtrip,
             )
-            review_report.step1_status = result["status"]
-            if result["status"] != "PASS":
-                review_report.step1_error = f"STEP 1 returned status {result['status']}"
+            review_report.step1_status = coerce_step_status(result["status"])
+            if review_report.step1_status != StepStatus.PASS:
+                review_report.step1_error = f"STEP 1 returned status {render_status(review_report.step1_status)}"
         except Exception as exc:  # pragma: no cover - exercised via integration gating
-            review_report.step1_status = "ERROR"
+            review_report.step1_status = StepStatus.ERROR
             review_report.step1_error = str(exc)
             review_report.notes.append(f"STEP 1 execution failed -> {exc}")
 
@@ -124,12 +131,12 @@ def _safe_copy_name(relative_path: str) -> str:
     return sanitized.replace(" ", "_")
 
 
-def _should_run_step1(status: str, force_step1: bool) -> bool:
-    if status == "FAIL":
+def _should_run_step1(status: StepReviewStatus, force_step1: bool) -> bool:
+    if status == StepReviewStatus.FAIL:
         return False
-    if status == "REVIEW_REQUIRED":
+    if status == StepReviewStatus.REVIEW_REQUIRED:
         return force_step1
-    return status == "PASS"
+    return status == StepReviewStatus.PASS
 
 
 def _update_step1_state(
@@ -139,17 +146,17 @@ def _update_step1_state(
     force_step1: bool,
 ) -> None:
     if not (run_step1_pipeline or force_step1):
-        review_report.step1_status = "NOT_REQUESTED"
+        review_report.step1_status = StepRunState.NOT_REQUESTED
         return
-    if review_report.status == "FAIL":
-        review_report.step1_status = "SKIPPED"
+    if review_report.status == StepReviewStatus.FAIL:
+        review_report.step1_status = StepStatus.SKIPPED
         review_report.notes.append("STEP 1 execution skipped because STEP 2 status is FAIL")
         return
-    if review_report.status == "REVIEW_REQUIRED" and not force_step1:
-        review_report.step1_status = "SKIPPED"
+    if review_report.status == StepReviewStatus.REVIEW_REQUIRED and not force_step1:
+        review_report.step1_status = StepStatus.SKIPPED
         review_report.notes.append("STEP 1 execution skipped because STEP 2 review is required")
         return
-    review_report.step1_status = "PENDING"
+    review_report.step1_status = StepRunState.PENDING
 
 
 def _parse_args() -> argparse.Namespace:
@@ -185,24 +192,24 @@ def main() -> int:
         step1_skip_roundtrip=not args.step1_run_roundtrip,
         force=args.force,
     )
-    print(f"status={result['status']}")
+    print(f"status={render_status(result['status'])}")
     print(f"normalized_manifest={result['normalized_manifest']}")
     print(f"step1_manifest={result['step1_manifest']}")
     print(f"review_report={result['review_report']}")
-    print(f"step1_status={result['step1_status']}")
+    print(f"step1_status={render_status(result['step1_status'])}")
     if result["step1_error"]:
         print(f"step1_error={result['step1_error']}")
     step1_requested = bool(args.run_step1 or args.force_step1)
     # If STEP 1 was requested, PASS is the only successful outcome for the CLI.
-    if step1_requested and result["step1_status"] != "PASS":
+    if step1_requested and result["step1_status"] != StepStatus.PASS:
         _print_step1_failure(result["step1_status"], result["step1_error"])
         return 1
-    return 0 if result["status"] != "FAIL" else 1
+    return 0 if result["status"] != StepReviewStatus.FAIL else 1
 
 
-def _print_step1_failure(step1_status: str, step1_error: str | None) -> None:
+def _print_step1_failure(step1_status: StepStatus | StepRunState | str, step1_error: str | None) -> None:
     print("ERROR: STEP 1 FAILED", file=sys.stderr)
-    print(f"status: {step1_status}", file=sys.stderr)
+    print(f"status: {render_status(step1_status)}", file=sys.stderr)
     if step1_error:
         print(f"error: {step1_error}", file=sys.stderr)
 
