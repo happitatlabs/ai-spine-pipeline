@@ -1,6 +1,7 @@
 # Generated outputs
 /export/*
 !/export/.gitkeep
+/artifacts/
 
 # Local or vendored assets
 /vendor/
@@ -9,7 +10,11 @@
 
 # Logs
 *.log
+/.pytest_cache/
+**/__pycache__/
+*.pyc
 
 # OS/editor noise
+.vs/
 Thumbs.db
 .DS_Store

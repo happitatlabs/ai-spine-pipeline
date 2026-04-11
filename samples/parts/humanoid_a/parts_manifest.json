@@ -1,0 +1,12 @@
+{
+  "manifest_version": 1,
+  "template_hint": "humanoid_v1",
+  "parts": [
+    { "part_id": "head", "category": "head", "side": null, "file_path": "images/head.png", "bbox": [0, 0, 271, 298], "pivot_hint": [0.5, 0.15], "anchor_hint": "head", "anchor_offset": [0, 0], "rotation_hint": 0, "z_order_hint": 60, "symmetry_group": "upper", "human_verified": true },
+    { "part_id": "body", "category": "body", "side": null, "file_path": "images/body.png", "bbox": [0, 0, 98, 180], "pivot_hint": [0.5, 0.5], "anchor_hint": "torso", "anchor_offset": [0, 0], "rotation_hint": 0, "z_order_hint": 40, "symmetry_group": "core", "human_verified": true },
+    { "part_id": "arm_l", "category": "arm", "side": "L", "file_path": "images/arm_l.png", "bbox": [0, 0, 46, 97], "pivot_hint": [0.5, 0.18], "anchor_hint": "shoulder_l", "anchor_offset": [0, 0], "rotation_hint": 0, "z_order_hint": 50, "symmetry_group": "arms", "human_verified": true },
+    { "part_id": "arm_r", "category": "arm", "side": "R", "file_path": "images/arm_r.png", "bbox": [0, 0, 40, 87], "pivot_hint": [0.5, 0.2], "anchor_hint": "shoulder_r", "anchor_offset": [0, 0], "rotation_hint": 0, "z_order_hint": 20, "symmetry_group": "arms", "human_verified": true },
+    { "part_id": "leg_l", "category": "leg", "side": "L", "file_path": "images/leg_l.png", "bbox": [0, 0, 45, 112], "pivot_hint": [0.5, 0.1], "anchor_hint": "hip_l", "anchor_offset": [0, 0], "rotation_hint": 0, "z_order_hint": 10, "symmetry_group": "legs", "human_verified": true },
+    { "part_id": "leg_r", "category": "leg", "side": "R", "file_path": "images/leg_r.png", "bbox": [0, 0, 55, 94], "pivot_hint": [0.5, 0.1], "anchor_hint": "hip_r", "anchor_offset": [0, 0], "rotation_hint": 0, "z_order_hint": 5, "symmetry_group": "legs", "human_verified": true }
+  ]
+}

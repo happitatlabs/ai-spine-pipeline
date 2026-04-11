@@ -1,0 +1,11 @@
+[project]
+name = "ai-spine-pipeline"
+version = "0.1.0"
+description = "STEP 1 implementation for a Spine-oriented semi-automatic rigging pipeline."
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "integration: tests that require Spine CLI access",
+]

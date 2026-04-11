@@ -1,0 +1,63 @@
+template_id: humanoid_v1
+description: Minimal humanoid template for STEP 1 bundle generation and Spine CLI roundtrip validation.
+spine_version: "4.2.43"
+skeleton_name: humanoid_v1
+base_template_json: template_export.json
+required_parts:
+  - head
+  - body
+  - arm_l
+  - arm_r
+  - leg_l
+  - leg_r
+anchor_slot_map:
+  head: head
+  neck: head
+  torso: body
+  root: body
+  shoulder_l: arm_l
+  shoulder_r: arm_r
+  hip_l: leg_l
+  hip_r: leg_r
+fallback_rules:
+  - category: head
+    slot: head
+  - category: body
+    slot: body
+  - category: arm
+    side: L
+    slot: arm_l
+  - category: arm
+    side: R
+    slot: arm_r
+  - category: leg
+    side: L
+    slot: leg_l
+  - category: leg
+    side: R
+    slot: leg_r
+slots:
+  body:
+    bone: body
+    default_attachment: body
+    required: true
+  head:
+    bone: head
+    default_attachment: head
+    required: true
+  arm_l:
+    bone: arm_l
+    default_attachment: arm_l
+    required: true
+  arm_r:
+    bone: arm_r
+    default_attachment: arm_r
+    required: true
+  leg_l:
+    bone: leg_l
+    default_attachment: leg_l
+    required: true
+  leg_r:
+    bone: leg_r
+    default_attachment: leg_r
+    required: true

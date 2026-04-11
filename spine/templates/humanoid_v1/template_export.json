@@ -1,0 +1,51 @@
+{
+  "skeleton": {
+    "hash": "humanoid_v1",
+    "spine": "4.2.43",
+    "images": "./images/"
+  },
+  "bones": [
+    { "name": "root" },
+    { "name": "hip", "parent": "root", "y": 247.47 },
+    { "name": "body", "parent": "hip", "length": 127.56, "rotation": 103.82, "x": -1.62, "y": 4.9, "color": "e0da19ff" },
+    { "name": "arm_l", "parent": "body", "length": 69.45, "rotation": 168.38, "x": 103.76, "y": 19.33, "color": "00ff04ff" },
+    { "name": "arm_r", "parent": "body", "length": 51.94, "rotation": -169.56, "x": 92.36, "y": -19.22, "color": "ff000dff" },
+    { "name": "leg_l", "parent": "hip", "length": 74.81, "rotation": -95.51, "x": -17.46, "y": -11.64, "color": "00ff04ff" },
+    { "name": "leg_r", "parent": "hip", "length": 85.72, "rotation": -72.54, "x": 8.91, "y": -5.63, "color": "ff000dff" },
+    { "name": "neck", "parent": "body", "length": 25.45, "rotation": -31.54, "x": 127.5, "y": -0.31, "color": "e0da19ff" },
+    { "name": "head", "parent": "neck", "length": 263.58, "rotation": 23.18, "x": 27.66, "y": -0.26, "color": "e0da19ff" }
+  ],
+  "slots": [
+    { "name": "body", "bone": "body", "attachment": "body" },
+    { "name": "arm_r", "bone": "arm_r", "attachment": "arm_r" },
+    { "name": "leg_r", "bone": "leg_r", "attachment": "leg_r" },
+    { "name": "leg_l", "bone": "leg_l", "attachment": "leg_l" },
+    { "name": "arm_l", "bone": "arm_l", "attachment": "arm_l" },
+    { "name": "head", "bone": "head", "attachment": "head" }
+  ],
+  "skins": [
+    {
+      "name": "default",
+      "attachments": {
+        "body": {
+          "body": { "type": "region", "path": "body", "x": 63.61, "y": 7.12, "rotation": -94.54, "width": 98, "height": 180 }
+        },
+        "head": {
+          "head": { "type": "region", "path": "head", "x": 128.96, "y": 0.3, "rotation": -70.63, "width": 271, "height": 298 }
+        },
+        "arm_l": {
+          "arm_l": { "type": "region", "path": "arm_l", "x": 25.2, "y": 1.17, "rotation": 97.9, "width": 46, "height": 97 }
+        },
+        "arm_r": {
+          "arm_r": { "type": "region", "path": "arm_r", "x": 21.13, "y": 4.09, "rotation": 89.33, "width": 40, "height": 87 }
+        },
+        "leg_l": {
+          "leg_l": { "type": "region", "path": "leg_l", "x": 42.48, "y": 4.45, "rotation": 84.87, "width": 45, "height": 112 }
+        },
+        "leg_r": {
+          "leg_r": { "type": "region", "path": "leg_r", "x": 33.11, "y": -4.11, "rotation": 72.54, "width": 55, "height": 94 }
+        }
+      }
+    }
+  ]
+}

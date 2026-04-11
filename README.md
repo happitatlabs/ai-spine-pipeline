@@ -72,6 +72,22 @@ git -C "D:\Spine" add README.md spine_export.ps1 .gitignore projects/.gitkeep ex
 git -C "D:\Spine" commit -m "Add Spine CLI export automation setup"
 ```
 
+### safe.directory 메모
+
+이 환경에서는 `D:\Spine` 저장소가 현재 Windows 사용자와 다른 소유자로 보일 수 있어서 Git이 `dubious ownership` 오류를 낼 수 있다.
+
+그 경우 아래 설정으로 이 저장소만 신뢰 대상으로 추가하면 된다.
+
+```powershell
+git config --global --add safe.directory D:/Spine
+```
+
+현재 반영 상태는 아래 명령으로 확인할 수 있다.
+
+```powershell
+git config --global --get-all safe.directory
+```
+
 ## 기본 사용법
 
 ```powershell
@@ -222,3 +238,87 @@ Input .spine file not found: ...
 - 프로젝트별 출력 폴더 자동 매핑
 - 로그 파일 저장
 - CI/빌드 파이프라인 연결
+
+## STEP 1 구현 상태
+
+현재 저장소에는 STEP 1 기준의 최소 파이프라인 구현이 추가되어 있다.
+
+- 엔트리포인트: [pipeline/step1.py](D:\Spine\pipeline\step1.py)
+- 템플릿: [bone_template.yaml](D:\Spine\spine\templates\humanoid_v1\bone_template.yaml)
+- 기준 JSON: [template_export.json](D:\Spine\spine\templates\humanoid_v1\template_export.json)
+- 샘플 manifest: [humanoid_a](D:\Spine\samples\parts\humanoid_a\parts_manifest.json), [humanoid_b](D:\Spine\samples\parts\humanoid_b\parts_manifest.json), [humanoid_c](D:\Spine\samples\parts\humanoid_c\parts_manifest.json)
+
+핵심 동작:
+
+- `parts_manifest.json` 로드
+- `anchor_hint -> category+side fallback` 규칙 기반 매핑
+- `spine_import_bundle/` 생성
+- `draft_skeleton.json`, `bundle_meta.json`, `slot_map.json`, `review_report.json` 생성
+- 1차 roundtrip: `template patch -> Spine CLI export(json+pack)`
+- 선택 2차 roundtrip: `JSON import -> clean -> export(json+pack)`
+
+### draft_skeleton 최소 구조
+
+현재 구현은 최소한 아래 top-level 키를 보장한다.
+
+```json
+{
+  "bones": [...],
+  "slots": [...],
+  "skins": [...]
+}
+```
+
+참고:
+
+- 로더/패처는 `skins`가 리스트인 Spine export JSON과 객체형 최소 구조를 둘 다 처리한다.
+- 실제 템플릿 파일은 현재 Spine 예제 export JSON과의 호환을 위해 리스트형 `skins`를 사용한다.
+
+### STEP 1 실행 예시
+
+```powershell
+python -m pipeline.step1 `
+  --parts-manifest "D:\Spine\samples\parts\humanoid_a\parts_manifest.json" `
+  --template-id "humanoid_v1" `
+  --bundle-dir "D:\Spine\artifacts\humanoid_a\bundle" `
+  --roundtrip-dir "D:\Spine\artifacts\humanoid_a\roundtrip" `
+  --force
+```
+
+2차 roundtrip까지 같이 보려면:
+
+```powershell
+python -m pipeline.step1 `
+  --parts-manifest "D:\Spine\samples\parts\humanoid_a\parts_manifest.json" `
+  --template-id "humanoid_v1" `
+  --bundle-dir "D:\Spine\artifacts\humanoid_a\bundle" `
+  --roundtrip-dir "D:\Spine\artifacts\humanoid_a\roundtrip" `
+  --run-secondary-roundtrip `
+  --secondary-project-path "D:\Spine\artifacts\humanoid_a\roundtrip\generated.spine" `
+  --force
+```
+
+### 테스트
+
+로컬 단위 테스트:
+
+```powershell
+pytest -q
+```
+
+현재 테스트 범위:
+
+- anchor 기반 매핑
+- category/side fallback 매핑
+- bundle 최소 구조 생성
+- fake CLI 기반 workflow PASS 리포트 생성
+
+### STEP 1 결과 요약
+
+- STEP 1은 `분리된 파츠 이미지 + humanoid_v1 템플릿 -> draft_skeleton.json 생성 -> Spine CLI roundtrip 검증` 범위까지 구현 및 로컬 검증 완료
+- 로컬 검증 결과: `pytest -q: 4 passed`, primary roundtrip `3/3 PASS`, secondary roundtrip `1건 PASS`
+- 샘플 실행 시간: 약 `4.2s / 4.2s / 4.3s`, unresolved mapping은 전부 `0`
+- `humanoid_b`는 fallback 경로 검증용 샘플이며 `mapping_confidence_avg=0.7917`로 기록됨
+- 현재 완료 범위는 `단일 템플릿(humanoid_v1)`과 `샘플 3세트` 기준의 로컬 검증
+- 아직 포함되지 않은 범위는 `원화 자동 분리`, `텍스트 기반 생성`, `다중 템플릿 일반화`, `정량 layout metric`
+- 현재 산출물은 사람이 Spine에서 후처리할 수 있는 리깅 초안이며, 완전 자동 리깅 결과물을 의미하지 않는다
