@@ -453,3 +453,117 @@ STEP 1 실행 요청 후 결과 해석 규칙:
 - Spine Editor bone/keyframe/timeline 직접 편집
 - 다중 템플릿 일반화
 - 정량 layout metric 자동 판정
+
+## STEP 3 구현 상태
+
+현재 저장소에는 STEP 3 기준의 copy-only external result adapter가 추가되어 있다.
+
+- 엔트리포인트: [pipeline/step3.py](D:\Spine\pipeline\step3.py)
+- 어댑터 로직: [ai_adapter.py](D:\Spine\pipeline\ai_adapter.py)
+- 계약 정의: [step3_contracts.py](D:\Spine\pipeline\step3_contracts.py)
+- 샘플 입력: [plain_image_set](D:\Spine\samples\step3\plain_image_set), [ai_package_valid](D:\Spine\samples\step3\ai_package_valid), [ai_package_partial](D:\Spine\samples\step3\ai_package_partial), [ai_package_broken](D:\Spine\samples\step3\ai_package_broken)
+
+핵심 동작:
+
+- 외부 PNG 자산 재귀 스캔
+- `image_set`, `ai_package`, `manual_prep` 입력 종류 구분
+- metadata 기반 `suggested_name`/hint 반영
+- sanitize 및 deterministic collision suffix 적용
+- `step2_input/raw`로 복사본만 생성
+- `adapter_manifest.json`, `review_report.json` 생성
+- STEP 2가 바로 읽을 수 있는 입력 디렉토리 준비
+
+### STEP 3 출력 구조
+
+```text
+step3_output/
+  step2_input/
+    raw/
+      *.png
+    adapter_manifest.json
+  review_report.json
+```
+
+중요한 불변식:
+
+- STEP 3는 원본 입력 파일을 수정하지 않는다
+- 모든 파일 작업은 `step2_input/raw`로의 복사만 허용한다
+- prepared filename 정규화는 복사본 이름에만 적용한다
+- 같은 입력과 같은 옵션으로 다시 실행하면 동일한 산출물을 생성하도록 설계한다
+
+### STEP 3 입력 정책
+
+- `image_set`
+  - PNG 집합만 있으면 된다
+  - metadata는 선택 사항
+- `manual_prep`
+  - 수동 전처리된 PNG 집합
+  - metadata는 선택 사항
+- `ai_package`
+  - metadata 포함을 전제로 한다
+  - metadata JSON이 없으면 `FAIL`
+  - metadata가 일부 asset만 커버하면 `REVIEW_REQUIRED`
+
+### STEP 3 상태 의미
+
+- `PASS`
+  - STEP 2에 넘길 수 있는 복사 기반 출력이 생성되었고 review-needed 조건이 없음
+- `REVIEW_REQUIRED`
+  - STEP 2 handoff는 가능하지만 입력 불확실성이 남아 있음
+- `FAIL`
+  - STEP 2 handoff에 신뢰할 수 없는 상태
+
+`review_needed`는 품질 판정이 아니다. 의미는 아래로 제한한다.
+
+- naming ambiguity
+- metadata incompleteness
+- source/target collision
+- AI hint provenance 불확실성
+
+즉, STEP 3는 rigging quality나 image quality를 평가하지 않는다.
+
+### STEP 3 실행 예시
+
+```powershell
+python -m pipeline.step3 `
+  --input-dir "D:\Spine\samples\step3\plain_image_set" `
+  --input-kind image_set `
+  --template-id "humanoid_v1" `
+  --output-dir "D:\Spine\artifacts\step3\plain_image_set" `
+  --force
+```
+
+```powershell
+python -m pipeline.step3 `
+  --input-dir "D:\Spine\samples\step3\ai_package_valid" `
+  --input-kind ai_package `
+  --template-id "humanoid_v1" `
+  --output-dir "D:\Spine\artifacts\step3\ai_package_valid" `
+  --meta-json "metadata.json" `
+  --force
+```
+
+STEP 3 후 STEP 2 연결 예시:
+
+```powershell
+python -m pipeline.step3 `
+  --input-dir "D:\Spine\samples\step3\ai_package_valid" `
+  --input-kind ai_package `
+  --template-id "humanoid_v1" `
+  --output-dir "D:\Spine\artifacts\step3\ai_package_valid" `
+  --meta-json "metadata.json" `
+  --force
+
+python -m pipeline.step2 `
+  --input-dir "D:\Spine\artifacts\step3\ai_package_valid\step2_input" `
+  --template-id "humanoid_v1" `
+  --output-dir "D:\Spine\artifacts\step2\from_step3" `
+  --force
+```
+
+### STEP 3에서 하지 않는 것
+
+- 이미지 생성
+- 모델 학습
+- Spine Editor 자동 편집
+- rigging quality 보장

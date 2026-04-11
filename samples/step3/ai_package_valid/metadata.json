@@ -1,0 +1,57 @@
+{
+  "manifest_version": 1,
+  "assets": [
+    {
+      "source": "incoming/front_upper_arm.png",
+      "suggested_name": "arm_l",
+      "category_hint": "arm",
+      "side_hint": "L",
+      "variant_hint": "upper",
+      "review_needed": false,
+      "notes": [
+        "ai extracted from pose segmentation"
+      ]
+    },
+    {
+      "source": "incoming/front_thigh.png",
+      "suggested_name": "leg_l",
+      "category_hint": "leg",
+      "side_hint": "L",
+      "variant_hint": "upper",
+      "review_needed": false,
+      "notes": []
+    },
+    {
+      "source": "incoming/head-piece.png",
+      "suggested_name": "head",
+      "category_hint": "head",
+      "review_needed": false,
+      "notes": []
+    },
+    {
+      "source": "incoming/rear_thigh.png",
+      "suggested_name": "leg_r",
+      "category_hint": "leg",
+      "side_hint": "R",
+      "variant_hint": "upper",
+      "review_needed": false,
+      "notes": []
+    },
+    {
+      "source": "incoming/rear_upper_arm.png",
+      "suggested_name": "arm_r",
+      "category_hint": "arm",
+      "side_hint": "R",
+      "variant_hint": "upper",
+      "review_needed": false,
+      "notes": []
+    },
+    {
+      "source": "incoming/torso-piece.png",
+      "suggested_name": "body",
+      "category_hint": "body",
+      "review_needed": false,
+      "notes": []
+    }
+  ]
+}

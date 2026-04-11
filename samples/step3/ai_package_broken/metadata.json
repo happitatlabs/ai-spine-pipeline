@@ -1,0 +1,12 @@
+{
+  "manifest_version": 1,
+  "assets": [
+    {
+      "source": "incoming/missing.png",
+      "suggested_name": "head",
+      "category_hint": "head",
+      "review_needed": false,
+      "notes": []
+    }
+  ]
+}
