@@ -294,6 +294,7 @@ def load_metadata(
     coverage = {
         "partial": False,
         "covered_paths": set(),
+        "metadata_present": False,
     }
 
     metadata_path = None
@@ -348,6 +349,7 @@ def load_metadata(
             )
         )
         return {}, issues, coverage
+    coverage["metadata_present"] = True
 
     discovered_set = {path.relative_to(input_dir).as_posix() for path in discovered}
     metadata_by_source: dict[str, dict[str, Any]] = {}
@@ -407,7 +409,7 @@ def load_metadata(
         metadata_by_source[normalized_source] = normalized_entry
 
     covered_paths = set(metadata_by_source)
-    if metadata_by_source and covered_paths != discovered_set:
+    if covered_paths != discovered_set and coverage["metadata_present"]:
         coverage["partial"] = True
     coverage["covered_paths"] = covered_paths
     return metadata_by_source, issues, coverage

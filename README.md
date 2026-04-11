@@ -465,7 +465,7 @@ STEP 1 실행 요청 후 결과 해석 규칙:
 
 핵심 동작:
 
-- 외부 PNG 자산 재귀 스캔
+- 외부 PNG 자산 재귀 스캔 (`.png`, `.PNG` 모두 허용)
 - `image_set`, `ai_package`, `manual_prep` 입력 종류 구분
 - metadata 기반 `suggested_name`/hint 반영
 - sanitize 및 deterministic collision suffix 적용
@@ -503,6 +503,24 @@ step3_output/
   - metadata 포함을 전제로 한다
   - metadata JSON이 없으면 `FAIL`
   - metadata가 일부 asset만 커버하면 `REVIEW_REQUIRED`
+  - metadata `assets=[]`도 coverage 부족으로 해석하므로 `REVIEW_REQUIRED`
+
+### STEP 3 contract 위반 처리
+
+다음은 `FAIL`로 처리한다.
+
+- `ai_package`인데 metadata가 없음
+- metadata를 읽을 수 없음
+- metadata `source`가 실제 PNG를 가리키지 않음
+- metadata `source`가 `input_dir` 밖을 가리킴
+- 같은 source에 대해 충돌하는 duplicate metadata가 있음
+- `suggested_name` sanitize 결과가 빈 문자열이 됨
+
+다음은 `REVIEW_REQUIRED`로 처리한다.
+
+- metadata가 일부 asset만 커버함
+- prepared target name 충돌로 deterministic suffix가 붙음
+- asset별 `review_needed=true`가 남아 있음
 
 ### STEP 3 상태 의미
 
