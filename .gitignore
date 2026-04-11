@@ -1,0 +1,15 @@
+# Generated outputs
+/export/*
+!/export/.gitkeep
+
+# Local or vendored assets
+/vendor/
+/projects/*
+!/projects/.gitkeep
+
+# Logs
+*.log
+
+# OS/editor noise
+Thumbs.db
+.DS_Store
